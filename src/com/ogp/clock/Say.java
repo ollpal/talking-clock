@@ -12,12 +12,39 @@ import android.util.Log;
 
 import java.util.HashMap;
 import java.util.Locale;
+import java.util.concurrent.LinkedBlockingQueue;
 
 public class Say extends Service implements OnInitListener {
+
+    private class QueueThread extends Thread {
+
+        QueueThread() {
+            super("QueueThread");
+        }
+
+        @Override
+        public void run() {
+            while (true) {
+                Runnable r;
+                try {
+                    r = queue.take();
+                    r.run();
+                } catch (InterruptedException e) {
+                    Log.i(TAG, e.toString());
+                }
+            }
+        }
+    }
 
     public static final String SAY_TEXT = "say.text";
 
     private static final String TAG = "SayTask";
+
+    private Object lock = new Object();
+
+    private final LinkedBlockingQueue<Runnable> queue = new LinkedBlockingQueue<Runnable>();
+
+    private QueueThread queueThread;
 
     private TextToSpeech tts;
 
@@ -25,11 +52,16 @@ public class Say extends Service implements OnInitListener {
     public IBinder onBind(Intent arg0) {
         return null;
     }
-
     @Override
     public void onCreate() {
         super.onCreate();
         Log.d(TAG, "OnCreate");
+
+        if (queueThread == null) {
+            queueThread = new QueueThread();
+            queueThread.start();
+          }
+
         tts = new TextToSpeech(this, this);
     }
 
@@ -64,20 +96,27 @@ public class Say extends Service implements OnInitListener {
         super.onStart(intent, startId);
         Log.d(TAG, "OnStart");
 
-        AudioManager am = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-        if (am.isMusicActive()) {
-            Intent i = new Intent("com.android.music.musicservicecommand");
-            i.putExtra("command", "pause");
-            sendBroadcast(i);
-        }
+        final String text = intent.getStringExtra(SAY_TEXT);
 
-        HashMap<String, String> settings = new HashMap<String, String>();
-        settings.put(TextToSpeech.Engine.KEY_PARAM_STREAM,
-                String.valueOf(AudioManager.STREAM_MUSIC));
+        addToQueue(new Runnable() {
 
-        int result = tts.speak(intent.getStringExtra(SAY_TEXT), TextToSpeech.QUEUE_ADD, settings);
-        if (result == TextToSpeech.ERROR) {
-            Log.e(TAG, "Failed to speak");
+            @Override
+            public void run() {
+                HashMap<String, String> settings = new HashMap<String, String>();
+                settings.put(TextToSpeech.Engine.KEY_PARAM_STREAM,
+                        String.valueOf(AudioManager.STREAM_MUSIC));
+
+                int result = tts.speak(text, TextToSpeech.QUEUE_ADD, settings);
+                if (result == TextToSpeech.ERROR) {
+                    Log.e(TAG, "Failed to speak");
+                }
+            }
+        });
+    }
+
+    private void addToQueue(Runnable runnable) {
+        synchronized (lock) {
+
         }
     }
 }
