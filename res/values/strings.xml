@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="hello">Hello World, TalkingClockActivity!</string>
+    <string name="app_name">Talking Clock</string>
+    <string name="time_hour">The time is %2$s o\'clock</string>
+    <string name="time_half">The time is half past %2$s</string>
+    <string name="time_past">The time is %1$s minutes past %2$s</string>
+    <string name="time_to">The time is %1$s minutes to %2$s</string>
+
+</resources>
