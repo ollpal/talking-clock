@@ -40,10 +40,13 @@ public class Say extends Service implements OnInitListener {
         super.onDestroy();
         Log.d(TAG, "OnDestroy");
 
-        queue.clear();
+        queue.add(new Runnable() {
 
-        tts.stop();
-        tts.shutdown();
+            @Override
+            public void run() {
+                tts.shutdown();
+            }
+        });
     }
 
     @Override
