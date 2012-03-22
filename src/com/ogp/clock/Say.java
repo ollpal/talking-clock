@@ -2,7 +2,6 @@
 package com.ogp.clock;
 
 import android.app.Service;
-import android.content.Context;
 import android.content.Intent;
 import android.media.AudioManager;
 import android.os.IBinder;
@@ -12,39 +11,14 @@ import android.util.Log;
 
 import java.util.HashMap;
 import java.util.Locale;
-import java.util.concurrent.LinkedBlockingQueue;
 
 public class Say extends Service implements OnInitListener {
-
-    private class QueueThread extends Thread {
-
-        QueueThread() {
-            super("QueueThread");
-        }
-
-        @Override
-        public void run() {
-            while (true) {
-                Runnable r;
-                try {
-                    r = queue.take();
-                    r.run();
-                } catch (InterruptedException e) {
-                    Log.i(TAG, e.toString());
-                }
-            }
-        }
-    }
 
     public static final String SAY_TEXT = "say.text";
 
     private static final String TAG = "SayTask";
 
-    private Object lock = new Object();
-
-    private final LinkedBlockingQueue<Runnable> queue = new LinkedBlockingQueue<Runnable>();
-
-    private QueueThread queueThread;
+    private ThreadQueue queue = new ThreadQueue();
 
     private TextToSpeech tts;
 
@@ -52,15 +26,11 @@ public class Say extends Service implements OnInitListener {
     public IBinder onBind(Intent arg0) {
         return null;
     }
+
     @Override
     public void onCreate() {
         super.onCreate();
         Log.d(TAG, "OnCreate");
-
-        if (queueThread == null) {
-            queueThread = new QueueThread();
-            queueThread.start();
-          }
 
         tts = new TextToSpeech(this, this);
     }
@@ -69,6 +39,9 @@ public class Say extends Service implements OnInitListener {
     public void onDestroy() {
         super.onDestroy();
         Log.d(TAG, "OnDestroy");
+
+        queue.clear();
+
         tts.stop();
         tts.shutdown();
     }
@@ -78,17 +51,22 @@ public class Say extends Service implements OnInitListener {
         Log.d(TAG, "OnInit");
         if (status != TextToSpeech.SUCCESS) {
             Log.e(TAG, "Could not initialize TextToSpeech.");
+            queue.clear();
             return;
         }
 
         int result = tts.setLanguage(Locale.US);
         if (result == TextToSpeech.LANG_MISSING_DATA) {
             Log.e(TAG, "Language is missing data");
+            queue.clear();
             return;
         } else if (result == TextToSpeech.LANG_NOT_SUPPORTED) {
             Log.e(TAG, "Language is not supported");
+            queue.clear();
             return;
         }
+
+        queue.start();
     }
 
     @Override
@@ -98,7 +76,7 @@ public class Say extends Service implements OnInitListener {
 
         final String text = intent.getStringExtra(SAY_TEXT);
 
-        addToQueue(new Runnable() {
+        queue.add(new Runnable() {
 
             @Override
             public void run() {
@@ -112,11 +90,5 @@ public class Say extends Service implements OnInitListener {
                 }
             }
         });
-    }
-
-    private void addToQueue(Runnable runnable) {
-        synchronized (lock) {
-
-        }
     }
 }
