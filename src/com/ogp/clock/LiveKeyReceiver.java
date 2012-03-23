@@ -31,6 +31,7 @@ public class LiveKeyReceiver extends BroadcastReceiver {
         minute = (minute + 2) / 5 * 5;
         if (minute >= 60) {
             minute = 0;
+            hour += 1;
         }
 
         Resources res = context.getResources();
