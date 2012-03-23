@@ -5,7 +5,7 @@
     <string name="app_name">Talking Clock</string>
     <string name="time_hour">The time is %2$s o\'clock</string>
     <string name="time_half">The time is half past %2$s</string>
-    <string name="time_past">The time is %1$s minutes past %2$s</string>
+    <string name="time_past">The time is %1$s minutes past %2$s</string><string name="time_quarter_past">The time is quarter past %2$s</string><string name="time_quarter_to">The time is quarter to %2$s</string>
     <string name="time_to">The time is %1$s minutes to %2$s</string>
 
 </resources>

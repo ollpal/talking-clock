@@ -39,9 +39,13 @@ public class LiveKeyReceiver extends BroadcastReceiver {
         String text;
         if (minute == 0) {
             text = String.format(res.getString(R.string.time_hour), minute, hour);
+        }  else if (minute == 15) {
+            text = String.format(res.getString(R.string.time_quarter_past), minute, hour);
+        }  else if (minute == 45) {
+            text = String.format(res.getString(R.string.time_quarter_to), minute, hour + 1);
         } else if (minute < 30) {
             text = String.format(res.getString(R.string.time_past), minute, hour);
-            } else if (minute > 30) {
+        } else if (minute > 30) {
             text = String.format(res.getString(R.string.time_to), 60 - minute, hour + 1);
         } else {
             text = String.format(res.getString(R.string.time_half), minute, hour);
