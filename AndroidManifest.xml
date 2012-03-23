@@ -16,7 +16,7 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </receiver>
-        <service android:name="Say"></service>
+        <service android:name="Say" android:exported="false"></service>
     </application>
 
 </manifest>
