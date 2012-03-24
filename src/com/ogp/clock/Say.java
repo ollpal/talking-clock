@@ -3,14 +3,17 @@ package com.ogp.clock;
 import android.app.Service;
 import android.content.Intent;
 import android.media.AudioManager;
+import android.media.AudioManager.OnAudioFocusChangeListener;
 import android.os.IBinder;
 import android.speech.tts.TextToSpeech;
+import android.speech.tts.TextToSpeech.OnInitListener;
+import android.speech.tts.TextToSpeech.OnUtteranceCompletedListener;
 import android.util.Log;
 
 import java.util.HashMap;
 import java.util.Locale;
 
-public class Say extends Service implements TextToSpeech.OnInitListener, TextToSpeech.OnUtteranceCompletedListener {
+public class Say extends Service implements OnInitListener, OnUtteranceCompletedListener {
 
     public static final String SAY_TEXT = "say.text";
 
@@ -21,6 +24,10 @@ public class Say extends Service implements TextToSpeech.OnInitListener, TextToS
     private boolean initialized = false;
 
     private String text;
+
+    private AudioManager am;
+
+    private int audioFocus;
 
     @Override
     public IBinder onBind(Intent arg0) {
@@ -33,6 +40,7 @@ public class Say extends Service implements TextToSpeech.OnInitListener, TextToS
         Log.d(TAG, "OnCreate");
 
         tts = new TextToSpeech(this, this);
+        am = (AudioManager) getSystemService(AUDIO_SERVICE);
     }
 
     @Override
@@ -40,6 +48,7 @@ public class Say extends Service implements TextToSpeech.OnInitListener, TextToS
         super.onDestroy();
         Log.d(TAG, "OnDestroy");
 
+        am = null;
         tts.shutdown();
     }
 
@@ -51,12 +60,10 @@ public class Say extends Service implements TextToSpeech.OnInitListener, TextToS
 
             int result = tts.setLanguage(Locale.US);
             if (result != TextToSpeech.LANG_MISSING_DATA && result != TextToSpeech.LANG_NOT_SUPPORTED) {
-                result = say(text);
-                if (result != TextToSpeech.ERROR) {
-                    initialized = true;
-                } else {
-                    Log.e(TAG, "Failed to speak");
+                if (text != null && !text.isEmpty()) {
+                    say(text);
                 }
+                initialized = true;
             } else {
                 if (result == TextToSpeech.LANG_MISSING_DATA) {
                     Log.e(TAG, "Language is missing data");
@@ -70,14 +77,17 @@ public class Say extends Service implements TextToSpeech.OnInitListener, TextToS
     }
 
     private int say(String text) {
+        int result = TextToSpeech.SUCCESS;
         if (!tts.isSpeaking()) {
+            audioFocus = am.requestAudioFocus(null, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK);
+            
             HashMap<String, String> speakSettings = new HashMap<String, String>();
             speakSettings.put(TextToSpeech.Engine.KEY_PARAM_STREAM, String.valueOf(AudioManager.STREAM_MUSIC));
-            speakSettings.put(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, "olle");
+            speakSettings.put(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, "3770");
 
-            return tts.speak(text, TextToSpeech.QUEUE_FLUSH, speakSettings);
+            result = tts.speak(text, TextToSpeech.QUEUE_FLUSH, speakSettings);
         }
-        return TextToSpeech.SUCCESS;
+        return result;
     }
 
     @Override
@@ -95,6 +105,11 @@ public class Say extends Service implements TextToSpeech.OnInitListener, TextToS
     @Override
     public void onUtteranceCompleted(String utteranceId) {
         Log.d(TAG, "onUtteranceCompleted");
+
+        if (audioFocus == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+            am.abandonAudioFocus(null);
+        }
+
         stopSelf();
     }
 }
