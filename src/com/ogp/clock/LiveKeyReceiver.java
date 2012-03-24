@@ -38,19 +38,27 @@ public class LiveKeyReceiver extends BroadcastReceiver {
 
         String text;
         if (minute == 0) {
-            text = String.format(res.getString(R.string.time_hour), minute, hour);
-        }  else if (minute == 15) {
-            text = String.format(res.getString(R.string.time_quarter_past), minute, hour);
-        }  else if (minute == 45) {
-            text = String.format(res.getString(R.string.time_quarter_to), minute, hour + 1);
+            text = String.format(res.getString(R.string.time_hour), minute, hour(hour));
+        } else if (minute == 15) {
+            text = String.format(res.getString(R.string.time_quarter_past), minute, hour(hour));
+        } else if (minute == 45) {
+            text = String.format(res.getString(R.string.time_quarter_to), minute, hour(hour + 1));
         } else if (minute < 30) {
-            text = String.format(res.getString(R.string.time_past), minute, hour);
+            text = String.format(res.getString(R.string.time_past), minute, hour(hour));
         } else if (minute > 30) {
-            text = String.format(res.getString(R.string.time_to), 60 - minute, hour + 1);
+            text = String.format(res.getString(R.string.time_to), 60 - minute, hour(hour + 1));
         } else {
-            text = String.format(res.getString(R.string.time_half), minute, hour);
+            text = String.format(res.getString(R.string.time_half), minute, hour(hour));
         }
 
-        return String.format(text, minute, hour);
+        return text;
+    }
+    
+    private int hour(int h) {
+        h %= 12;
+        if (h == 0) {
+            h = 12;
+        }
+        return h;
     }
 }

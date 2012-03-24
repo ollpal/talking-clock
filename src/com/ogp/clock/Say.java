@@ -1,17 +1,16 @@
 package com.ogp.clock;
 
+import java.util.HashMap;
+import java.util.Locale;
+
 import android.app.Service;
 import android.content.Intent;
 import android.media.AudioManager;
-import android.media.AudioManager.OnAudioFocusChangeListener;
 import android.os.IBinder;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.TextToSpeech.OnInitListener;
 import android.speech.tts.TextToSpeech.OnUtteranceCompletedListener;
 import android.util.Log;
-
-import java.util.HashMap;
-import java.util.Locale;
 
 public class Say extends Service implements OnInitListener, OnUtteranceCompletedListener {
 
@@ -70,9 +69,11 @@ public class Say extends Service implements OnInitListener, OnUtteranceCompleted
                 } else if (result == TextToSpeech.LANG_NOT_SUPPORTED) {
                     Log.e(TAG, "Language is not supported");
                 }
+                stopSelf();
             }
         } else {
             Log.e(TAG, "Could not initialize TextToSpeech.");
+            stopSelf();
         }
     }
 
